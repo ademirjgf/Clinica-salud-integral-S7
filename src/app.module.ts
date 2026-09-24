@@ -4,9 +4,10 @@ import { AppService } from './app.service.js'
 import { PrismaModule } from './prisma/prisma.module.js'
 import { PacientesModule } from './pacientes/pacientes.module.js';
 import { MedicosModule } from './medicos/medicos.module.js';
+import { AuthModule } from './auth/auth.module.js';
 
 @Module({
-  imports: [PrismaModule, PacientesModule, MedicosModule],
+  imports: [PrismaModule, PacientesModule, MedicosModule, AuthModule],
   controllers: [AppController],
   providers: [AppService]
 })
