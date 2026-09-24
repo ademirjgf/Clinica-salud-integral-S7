@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service.js'
+
 
 type PacienteData = {
   nombre: string
@@ -27,18 +28,32 @@ export class PacientesService {
   }
 
   create(data: PacienteData) {
-    return this.prisma.paciente.create({
-      data
-    })
+  if (new Date(data.fechaNacimiento) > new Date()) {
+    throw new BadRequestException(
+      'La fecha de nacimiento no puede ser futura'
+    )
   }
 
-  update(id: number, data: Partial<PacienteData>) {
-    return this.prisma.paciente.update({
-      where: { id },
-      data
-    })
+  return this.prisma.paciente.create({
+    data
+  })
+}
+
+update(id: number, data: Partial<PacienteData>) {
+  if (
+    data.fechaNacimiento &&
+    new Date(data.fechaNacimiento) > new Date()
+  ) {
+    throw new BadRequestException(
+      'La fecha de nacimiento no puede ser futura'
+    )
   }
 
+  return this.prisma.paciente.update({
+    where: { id },
+    data
+  })
+}
   remove(id: number) {
     return this.prisma.paciente.delete({
       where: { id }
