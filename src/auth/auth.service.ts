@@ -1,14 +1,26 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  Injectable,
+  UnauthorizedException
+} from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+
 import { PrismaService } from '../prisma/prisma.service.js'
 import { Role } from '../../generated/prisma/client.js'
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService
+  ) {}
 
-  async register(email: string, password: string, role: Role) {
+  async register(
+    email: string,
+    password: string,
+    role: Role
+  ) {
     const passwordHash = await bcrypt.hash(password, 10)
 
     return this.prisma.user.create({
@@ -25,13 +37,21 @@ export class AuthService {
     })
   }
 
-  async login(email: string, password: string) {
+  async login(
+    email: string,
+    password: string
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { email }
     })
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Credenciales inválidas')
+    if (
+      !user ||
+      !(await bcrypt.compare(password, user.password))
+    ) {
+      throw new UnauthorizedException(
+        'Credenciales inválidas'
+      )
     }
 
     const token = jwt.sign(
@@ -40,8 +60,10 @@ export class AuthService {
         email: user.email,
         role: user.role
       },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '8h' }
+      this.configService.getOrThrow<string>('JWT_SECRET'),
+      {
+        expiresIn: '8h'
+      }
     )
 
     return { token }
