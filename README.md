@@ -122,3 +122,20 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+
+## Pipeline de NestJS en POST /citas
+
+Cuando un cliente realiza una petición `POST /citas`, el request pasa por varias piezas de NestJS en este orden:
+
+1. **JwtAuthGuard** verifica que exista un token JWT válido.
+2. **RolesGuard** comprueba que el usuario tenga el rol requerido para acceder al recurso.
+3. **LoggingInterceptor** comienza a medir el tiempo de ejecución de la petición.
+4. **ValidationPipe** valida y transforma el body utilizando `CreateCitaDto`.
+5. **CitasController** recibe la petición y delega la lógica a `CitasService`.
+6. **CitasService** utiliza `PacientesService` para comprobar que el paciente exista antes de crear la cita.
+7. Prisma ejecuta la operación contra la base de datos.
+8. Si Prisma produce un error conocido, **PrismaExceptionFilter** lo transforma en una respuesta HTTP adecuada.
+9. Al finalizar correctamente la ejecución, **LoggingInterceptor** registra el método, la ruta y el tiempo total de respuesta.
+
+Este flujo integra Guards, Interceptors, Pipes, Controllers, Services y Filters dentro del ciclo de vida de una petición en NestJS.
