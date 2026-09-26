@@ -1,11 +1,14 @@
-import 'dotenv/config'
 import { ValidationPipe } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import {
+  DocumentBuilder,
+  SwaggerModule
+} from '@nestjs/swagger'
 
 import { AppModule } from './app.module.js'
-import { PrismaExceptionFilter } from './prisma/prisma-exception.filter.js'
 import { LoggingInterceptor } from './common/logging.interceptor.js'
+import { PrismaExceptionFilter } from './prisma/prisma-exception.filter.js'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -17,7 +20,9 @@ async function bootstrap() {
     })
   )
 
-  app.useGlobalFilters(new PrismaExceptionFilter())
+  app.useGlobalFilters(
+    new PrismaExceptionFilter()
+  )
 
   app.useGlobalInterceptors(
     new LoggingInterceptor()
@@ -25,7 +30,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Clínica Salud Integral')
-    .setDescription('API de la clínica, migrada a NestJS')
+    .setDescription(
+      'API de la clínica, migrada a NestJS'
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build()
@@ -41,7 +48,11 @@ async function bootstrap() {
     document
   )
 
-  await app.listen(process.env.PORT ?? 3000)
+  const configService = app.get(ConfigService)
+
+  await app.listen(
+    configService.getOrThrow<number>('PORT')
+  )
 }
 
 await bootstrap()
