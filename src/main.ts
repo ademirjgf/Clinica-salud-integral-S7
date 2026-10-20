@@ -1,3 +1,4 @@
+
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
@@ -12,6 +13,11 @@ import { PrismaExceptionFilter } from './prisma/prisma-exception.filter.js'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+
+  // Permitir peticiones desde el frontend React
+  app.enableCors({
+    origin: 'http://localhost:5173'
+  })
 
   app.useGlobalPipes(
     new ValidationPipe({
