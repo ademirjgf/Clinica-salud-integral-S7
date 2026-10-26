@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   NotFoundException
@@ -21,6 +22,7 @@ export class CitasService {
     private readonly pacientesService: PacientesService
   ) {}
 
+  // Crear una nueva cita
   async create(data: CitaData) {
     const paciente = await this.pacientesService.findOne(
       data.pacienteId
@@ -37,6 +39,7 @@ export class CitasService {
     })
   }
 
+  // Listar todas las citas
   findAll() {
     return this.prisma.cita.findMany({
       include: {
@@ -44,6 +47,27 @@ export class CitasService {
       },
       orderBy: {
         id: 'asc'
+      }
+    })
+  }
+
+  // Actualizar únicamente el estado de una cita
+  async updateEstado(id: number, estado: EstadoCita) {
+    const cita = await this.prisma.cita.findUnique({
+      where: { id }
+    })
+
+    if (!cita) {
+      throw new NotFoundException(
+        'La cita no existe'
+      )
+    }
+
+    return this.prisma.cita.update({
+      where: { id },
+      data: { estado },
+      include: {
+        paciente: true
       }
     })
   }
