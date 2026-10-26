@@ -1,3 +1,4 @@
+
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import Joi from 'joi'
@@ -9,6 +10,7 @@ import { PacientesModule } from './pacientes/pacientes.module.js'
 import { MedicosModule } from './medicos/medicos.module.js'
 import { AuthModule } from './auth/auth.module.js'
 import { CitasModule } from './citas/citas.module.js'
+import { ReportesModule } from './reportes/reportes.module.js'
 
 @Module({
   imports: [
@@ -24,7 +26,8 @@ import { CitasModule } from './citas/citas.module.js'
     PacientesModule,
     MedicosModule,
     AuthModule,
-    CitasModule
+    CitasModule,
+    ReportesModule
   ],
   controllers: [AppController],
   providers: [AppService]
