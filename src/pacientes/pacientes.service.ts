@@ -1,5 +1,9 @@
 
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable
+} from '@nestjs/common'
+
 import { PrismaService } from '../prisma/prisma.service.js'
 
 type PacienteData = {
@@ -13,26 +17,88 @@ type PacienteData = {
 export class PacientesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Obtener todos los pacientes
-  findAll() {
-    return this.prisma.paciente.findMany({
-      orderBy: {
-        id: 'asc'
-      }
-    })
+  async findAll(
+    query?: string,
+    paginaTexto?: string,
+    limiteTexto?: string
+  ) {
+    const pagina = paginaTexto === undefined
+      ? 1
+      : Number(paginaTexto)
+
+    const limite = limiteTexto === undefined
+      ? 100
+      : Number(limiteTexto)
+
+    if (
+      !Number.isInteger(pagina) ||
+      pagina < 1 ||
+      !Number.isInteger(limite) ||
+      limite < 1 ||
+      limite > 100
+    ) {
+      throw new BadRequestException(
+        'La página y el límite deben ser válidos (límite máximo: 100)'
+      )
+    }
+
+    const busqueda = query?.trim() ?? ''
+
+    const where = busqueda
+      ? {
+          OR: [
+            {
+              nombre: {
+                contains: busqueda,
+                mode: 'insensitive' as const
+              }
+            },
+            {
+              apellido: {
+                contains: busqueda,
+                mode: 'insensitive' as const
+              }
+            },
+            {
+              email: {
+                contains: busqueda,
+                mode: 'insensitive' as const
+              }
+            }
+          ]
+        }
+      : {}
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.paciente.findMany({
+        where,
+        orderBy: { id: 'asc' },
+        skip: (pagina - 1) * limite,
+        take: limite
+      }),
+      this.prisma.paciente.count({ where })
+    ])
+
+    return {
+      data,
+      total,
+      pagina,
+      totalPaginas: Math.ceil(total / limite)
+    }
   }
 
-  // Obtener un paciente por ID
   findOne(id: number) {
     return this.prisma.paciente.findUnique({
       where: { id }
     })
   }
 
-  // Convertir y validar la fecha de nacimiento
-  private validarFechaNacimiento(fecha: string | Date): Date {
+  private validarFechaNacimiento(
+    fecha: string | Date
+  ): Date {
     const fechaConvertida =
-      typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
+      typeof fecha === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(fecha)
         ? new Date(`${fecha}T00:00:00.000Z`)
         : new Date(fecha)
 
@@ -61,7 +127,6 @@ export class PacientesService {
     return fechaConvertida
   }
 
-  // Registrar un nuevo paciente
   create(data: PacienteData) {
     const fechaNacimiento = this.validarFechaNacimiento(
       data.fechaNacimiento
@@ -77,15 +142,18 @@ export class PacientesService {
     })
   }
 
-  // Actualizar un paciente existente
-  update(id: number, data: Partial<PacienteData>) {
+  update(
+    id: number,
+    data: Partial<PacienteData>
+  ) {
     const datosActualizados = {
       ...data,
       ...(data.fechaNacimiento !== undefined
         ? {
-            fechaNacimiento: this.validarFechaNacimiento(
-              data.fechaNacimiento
-            )
+            fechaNacimiento:
+              this.validarFechaNacimiento(
+                data.fechaNacimiento
+              )
           }
         : {})
     }
@@ -96,7 +164,6 @@ export class PacientesService {
     })
   }
 
-  // Eliminar un paciente
   remove(id: number) {
     return this.prisma.paciente.delete({
       where: { id }

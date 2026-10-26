@@ -1,3 +1,4 @@
+
 import {
   Body,
   Controller,
@@ -7,12 +8,14 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards
 } from '@nestjs/common'
 
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiTags
 } from '@nestjs/swagger'
 
@@ -34,11 +37,34 @@ export class PacientesController {
   ) {}
 
   @ApiOperation({
-    summary: 'Lista todos los pacientes'
+    summary: 'Lista pacientes con búsqueda y paginación'
+  })
+  @ApiQuery({
+    name: 'query',
+    required: false,
+    type: String
+  })
+  @ApiQuery({
+    name: 'pagina',
+    required: false,
+    type: Number
+  })
+  @ApiQuery({
+    name: 'limite',
+    required: false,
+    type: Number
   })
   @Get()
-  findAll() {
-    return this.pacientesService.findAll()
+  findAll(
+    @Query('query') query?: string,
+    @Query('pagina') pagina?: string,
+    @Query('limite') limite?: string
+  ) {
+    return this.pacientesService.findAll(
+      query,
+      pagina,
+      limite
+    )
   }
 
   @ApiOperation({
@@ -46,7 +72,9 @@ export class PacientesController {
   })
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const paciente = await this.pacientesService.findOne(Number(id))
+    const paciente = await this.pacientesService.findOne(
+      Number(id)
+    )
 
     if (!paciente) {
       throw new NotFoundException('Paciente no encontrado')
