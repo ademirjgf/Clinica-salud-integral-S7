@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   UnauthorizedException
@@ -66,6 +67,13 @@ export class AuthService {
       }
     )
 
-    return { token }
+    return {
+      token,
+      usuario: {
+        id: user.id,
+        email: user.email,
+        rol: user.role
+      }
+    }
   }
 }
