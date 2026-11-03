@@ -1,5 +1,6 @@
 
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -7,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   UseGuards
 } from '@nestjs/common'
 
@@ -24,6 +26,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js'
 import { RolesGuard } from '../auth/guards/roles.guard.js'
 import { Roles } from '../auth/decorators/roles.decorator.js'
 
+import { EstadoCita } from '../../generated/prisma/client.js'
+
 @ApiTags('Citas')
 @ApiBearerAuth()
 @Controller('citas')
@@ -34,7 +38,6 @@ export class CitasController {
     private readonly citasService: CitasService
   ) {}
 
-  // Crear cita
   @ApiOperation({
     summary: 'Agenda una nueva cita'
   })
@@ -43,7 +46,6 @@ export class CitasController {
     return this.citasService.create(dto)
   }
 
-  // Listar citas
   @ApiOperation({
     summary: 'Lista todas las citas'
   })
@@ -52,7 +54,53 @@ export class CitasController {
     return this.citasService.findAll()
   }
 
-  // Actualizar estado
+  @ApiOperation({
+    summary: 'Historial de citas con paginación y filtro por estado'
+  })
+  @Get('historial')
+  findHistorial(
+    @Query('pagina') paginaQuery?: string,
+    @Query('estado') estadoQuery?: string
+  ) {
+    const pagina = paginaQuery === undefined
+      ? 1
+      : Number(paginaQuery)
+
+    if (
+      !Number.isSafeInteger(pagina) ||
+      pagina < 1
+    ) {
+      throw new BadRequestException(
+        'La página debe ser un número entero mayor que cero'
+      )
+    }
+
+    const estados: Record<string, EstadoCita | undefined> = {
+      Todos: undefined,
+      Programada: EstadoCita.PROGRAMADA,
+      Completada: EstadoCita.COMPLETADA,
+      Cancelada: EstadoCita.CANCELADA
+    }
+
+    const estadoSolicitado = estadoQuery ?? 'Todos'
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        estados,
+        estadoSolicitado
+      )
+    ) {
+      throw new BadRequestException(
+        'Estado de cita no válido'
+      )
+    }
+
+    return this.citasService.findHistorial(
+      pagina,
+      estados[estadoSolicitado]
+    )
+  }
+
   @ApiOperation({
     summary: 'Actualiza el estado de una cita'
   })

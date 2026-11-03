@@ -39,7 +39,7 @@ export class CitasService {
     })
   }
 
-  // Listar todas las citas
+  // Listar todas las citas (endpoint existente)
   findAll() {
     return this.prisma.cita.findMany({
       include: {
@@ -49,6 +49,45 @@ export class CitasService {
         id: 'asc'
       }
     })
+  }
+
+  // Historial paginado: 10 registros por página
+  async findHistorial(
+    pagina: number,
+    estado?: EstadoCita
+  ) {
+    const limite = 10
+    const skip = (pagina - 1) * limite
+
+    const where = estado
+      ? { estado }
+      : {}
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.cita.findMany({
+        where,
+        include: {
+          paciente: true
+        },
+        orderBy: [
+          { fechaHora: 'desc' },
+          { id: 'desc' }
+        ],
+        skip,
+        take: limite
+      }),
+
+      this.prisma.cita.count({
+        where
+      })
+    ])
+
+    return {
+      data,
+      total,
+      pagina,
+      totalPaginas: Math.ceil(total / limite)
+    }
   }
 
   // Actualizar únicamente el estado de una cita
