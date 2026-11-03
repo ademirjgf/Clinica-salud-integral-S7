@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -69,6 +70,10 @@ model User {
   email    String @unique
   password String
   role     Role
+
+  nombre   String?
+  telefono String?
+  foto     String?
 
   @@map("users")
 }
