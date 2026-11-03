@@ -2,21 +2,26 @@
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import {
   DocumentBuilder,
   SwaggerModule
 } from '@nestjs/swagger'
+import { join } from 'node:path'
 
 import { AppModule } from './app.module.js'
 import { LoggingInterceptor } from './common/logging.interceptor.js'
 import { PrismaExceptionFilter } from './prisma/prisma-exception.filter.js'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule)
 
-  // Permitir peticiones desde el frontend React
   app.enableCors({
     origin: 'http://localhost:5173'
+  })
+
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/'
   })
 
   app.useGlobalPipes(
@@ -36,9 +41,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Clínica Salud Integral')
-    .setDescription(
-      'API de la clínica, migrada a NestJS'
-    )
+    .setDescription('API de la clínica, migrada a NestJS')
     .setVersion('1.0')
     .addBearerAuth()
     .build()
@@ -48,11 +51,7 @@ async function bootstrap() {
     config
   )
 
-  SwaggerModule.setup(
-    'api/docs',
-    app,
-    document
-  )
+  SwaggerModule.setup('api/docs', app, document)
 
   const configService = app.get(ConfigService)
 
