@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   Post,
   Put,
   Req,
@@ -46,20 +47,26 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  register(
-    @Body()
-    body: {
-      email: string
-      password: string
-      role: Role
-    }
-  ) {
-    return this.authService.register(
-      body.email,
-      body.password,
-      body.role
+register(
+  @Body()
+  body: {
+    email: string
+    password: string
+    role: Role
+  }
+) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new ForbiddenException(
+      'El registro público está deshabilitado'
     )
   }
+
+  return this.authService.register(
+    body.email,
+    body.password,
+    body.role
+  )
+}
 
   @Post('login')
   login(
