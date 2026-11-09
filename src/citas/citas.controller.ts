@@ -32,7 +32,7 @@ import { EstadoCita } from '../../generated/prisma/client.js'
 @ApiBearerAuth()
 @Controller('citas')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('RECEPCIONISTA')
+@Roles('RECEPCIONISTA', 'GERENCIA')
 export class CitasController {
   constructor(
     private readonly citasService: CitasService

@@ -19,7 +19,7 @@ import { Roles } from '../auth/decorators/roles.decorator.js'
 
 @Controller('medicos')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('RECEPCIONISTA')
+@Roles('RECEPCIONISTA', 'GERENCIA')
 export class MedicosController {
   constructor(
     private readonly medicosService: MedicosService

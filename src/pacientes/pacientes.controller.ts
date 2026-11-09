@@ -30,7 +30,7 @@ import { Roles } from '../auth/decorators/roles.decorator.js'
 @ApiBearerAuth()
 @Controller('pacientes')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('RECEPCIONISTA')
+@Roles('RECEPCIONISTA', 'GERENCIA')
 export class PacientesController {
   constructor(
     private readonly pacientesService: PacientesService
